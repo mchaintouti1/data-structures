@@ -1,0 +1,219 @@
+package TreeClasses;
+
+public class QuadTree {
+	QuadNode n;     // n is the root of the PR quadtree
+	int level;
+
+	public QuadTree() { 
+		this.n = new QuadNode(0, 0, 0, 0);
+	}
+	
+	public QuadTree(int xmin,int ymin,int xmax,int ymax) {
+
+		n  = new QuadNode(xmin,ymin,xmax,ymax);
+		n.setLeaf(false);
+		n.x=-1;
+		n.y=-1;
+	}
+	
+	/**
+	 *  We devide the rectangle that contain the current node.
+	 */
+	public void devideRect(QuadNode n)
+	 {
+		n.NW = new QuadNode(n.Xmin, n.Ymin, (n.Xmin+n.Xmax)/2,(n.Ymin+n.Ymax)/2 );
+		
+		n.SW = new QuadNode( n.Xmin, (n.Ymin+n.Ymax)/2,(n.Xmin+n.Xmax)/2,n.Ymax );
+		
+        n.NE = new QuadNode((n.Xmin+n.Xmax)/2, n.Ymin, n.Xmax,(n.Ymin+n.Ymax)/2 );
+        
+		n.SE = new QuadNode((n.Xmin+n.Xmax)/2, (n.Ymin+n.Ymax)/2, n.Xmax,n.Ymax );
+		
+
+	 }
+	/**Wrapper method for inserting with only x,y parameters
+	 * 
+	 */
+	public void insert(int x,int y) { 
+
+       insert(n, x , y); 
+
+	} 
+	/**
+	 * Recursion method for inserting nodes in the pr quad-tree
+	 * First check if x,y values is in the boundary of the current node and the current node is a leaf
+	 * if its true then insert the node,else devide the rectangle in SW,SE,NW,NE move the value of the node in the correct subtree  
+	 * and move in the next recursion for inserting
+	 */
+	public void insert(QuadNode node,int x,int y)
+	{
+			
+
+	        if (inBoundary(x,y,node)==true && leaf(node)==true) {
+	        	node.setX(x);
+	        	node.setY(y);
+	        	node.setLeaf(false);
+	        	return ;  
+	        }
+	        else 
+			{
+	        	if(node.divided==false && inBoundary(x,y,node)==true) {
+	        		this.devideRect(node);
+	        		node.divided= true;
+	        		
+	        		if(node.x !=-1 && node.y!=-1 && leaf(node)==false) {
+	        		 if(inBoundary(node.x,node.y,node.NE))
+	     	        	{
+	        			node.NE.x=node.x;
+	        			node.NE.y=node.y;
+	     	        	node.x=-1;
+	    	        	node.y=-1;
+	    	        	node.NE.leaf=false;
+	     	        	}
+	     	        
+	     	        else if(inBoundary(node.x,node.y,node.NW))
+	     	        	{
+	        			node.NW.x=node.x;
+	        			node.NW.y=node.y;
+	     	        	node.x=-1;
+	    	        	node.y=-1;
+	    	        	node.NW.leaf=false;
+	     	        	}
+	     			
+	     	        else if(inBoundary(node.x,node.y,node.SW))
+	     	        	{
+	        			node.SW.x=node.x;
+	        			node.SW.y=node.y;
+	     	        	node.x=-1;
+	    	        	node.y=-1;
+	    	        	node.SW.leaf=false;
+	     	        	}
+	     			
+	     	        else if(inBoundary(node.x,node.y,node.SE))
+	     	        	{
+	        			node.SE.x=node.x;
+	        			node.SE.y=node.y;
+	     	        	node.x=-1;
+	    	        	node.y=-1;
+	    	        	node.SE.leaf=false;
+	     	        	}
+	        		}
+	        	}
+			}
+
+	        
+	        if(inBoundary(x,y,node.NE))
+	        	insert(node.NE,x,y);
+	        
+	        else if(inBoundary(x,y,node.NW))
+	        	insert(node.NW,x,y);
+			
+	        else if(inBoundary(x,y,node.SE))
+	        	insert(node.SE,x,y);
+			
+	        else if(inBoundary(x,y,node.SW))
+	        	insert(node.SW,x,y);
+			
+			return ;
+
+	}
+	
+	
+	
+	/**
+	 * Check if node is leaf or inner node.
+	 */
+	public boolean isLeaf(QuadNode node)
+	{
+		if((node.SW == null) && (node.NE == null) && (node.NW == null )&& (node.SE == null) )
+			return true;
+		return false;
+	}
+	/**
+	 * Wrapper method for searching with x,y parameters only
+	 */
+	public QuadNode search(int x,int y) { 
+
+		level=0;
+		QuadNode ni =  search(n, x , y); 
+		return ni;
+		
+	       
+	    }
+	/**
+	 * Search for x,y values
+	 * If x,y values exist then return the current node 
+	 * else return null
+	 */
+	public QuadNode search(QuadNode node, int x, int y) { 
+		level++;
+		
+		if(node==null)
+			 return null;
+		
+		
+		 if (inBoundary(x,y,node)==true) {
+	        	if(node.x==x && node.y==y)
+	        	
+	        	return node;  
+	        }
+		 else
+			 return null;
+		 
+	        if(node.NE!= null && inBoundary(x,y,node.NE))
+	        {
+	        	return search(node.NE,x,y);
+	        }
+	        
+	        else if(node.NW!= null && inBoundary(x,y,node.NW))
+	        {
+	        	return search(node.NW,x,y);
+	        }
+			
+	        else if(node.SE!= null && inBoundary(x,y,node.SE))
+	        {
+	        	return search(node.SE,x,y);
+	        }
+			
+	        else if(node.SW!= null &&inBoundary(x,y,node.SW))
+	        {
+	        	return search(node.SW,x,y);
+	        }
+	        else 
+	        	return null;
+		
+	}
+
+	/**
+	 * Method for check if x,y values can be in the current node
+	 */
+	public boolean inBoundary(int x, int y, QuadNode n) {
+	    if (n == null)
+	        return false;
+	    return (x >= n.Xmin && x <= n.Xmax && y >= n.Ymin && y <= n.Ymax);
+	}
+
+
+	public QuadNode getN() {
+		return n;
+	}
+
+	public void setN(QuadNode n) {
+		this.n = n;
+	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
+	
+	public boolean leaf(QuadNode node)
+	{
+		if(node!=null && node.isLeaf())
+			return true;
+			return false;
+	}
+}
